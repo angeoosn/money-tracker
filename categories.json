@@ -1,0 +1,23 @@
+{
+  "Food": [
+    "Dining",
+    "Grocery"
+  ],
+  "Travel": [
+    "Flight",
+    "Hotel",
+    "Others"
+  ],
+  "Subscription": [],
+  "Daily Necessities": [],
+  "Transport": [],
+  "Education": [],
+  "Investment": [],
+  "Entertainment": [],
+  "Income": [
+    "Deposit",
+    "Dividend / Interest",
+    "Refund / Gift",
+    "Internal Transfer"
+  ]
+}

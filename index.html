@@ -33,13 +33,28 @@
       font-weight: 600;
     }
 
-    input, select, textarea, button {
+    input,
+    select,
+    textarea,
+    button {
       width: 100%;
       margin-bottom: 12px;
       padding: 12px 14px;
       border-radius: 12px;
       border: 1px solid #ddd;
       font-size: 16px;
+      background: #f3f3f3;
+    }
+
+    /* ✅ iOS date input 修正 */
+    input[type="date"] {
+      height: 52px;
+      line-height: 52px;
+      padding: 0 14px;
+      font-size: 16px;
+
+      -webkit-appearance: none;
+      appearance: none;
     }
 
     textarea {
@@ -74,6 +89,7 @@
 
     <div id="form">
       <input id="rawText" placeholder="What did you spend today?" />
+
       <input id="date" type="date" />
 
       <select id="type">
@@ -112,7 +128,7 @@
 
   <script>
     const WEBHOOK_URL = "https://angeoosn.app.n8n.cloud/webhook/62656b27-714e-4c1c-a1cc-28e0bf0c7295";
-    const CATEGORIES_URL = "https://raw.githubusercontent.com/angeoosn/money-tracker/main/categories.json";
+    const CATEGORY_URL = "./categories.json";
 
     const dateInput = document.getElementById("date");
     const rawText = document.getElementById("rawText");
@@ -129,14 +145,9 @@
 
     dateInput.valueAsDate = new Date();
 
-    let categoryData = {};
-
-    fetch(CATEGORIES_URL)
+    fetch(CATEGORY_URL)
       .then(res => res.json())
       .then(data => {
-        categoryData = data;
-
-        // Populate category
         Object.keys(data).forEach(cat => {
           const opt = document.createElement("option");
           opt.value = cat;
@@ -144,16 +155,15 @@
           category.appendChild(opt);
         });
 
-        // Populate all subcategories (flat, not locked)
-        const allSubs = new Set();
-        Object.values(data).forEach(arr => arr.forEach(s => allSubs.add(s)));
-
-        allSubs.forEach(sub => {
-          const opt = document.createElement("option");
-          opt.value = sub;
-          opt.textContent = sub;
-          subcategory.appendChild(opt);
-        });
+        category.onchange = () => {
+          subcategory.innerHTML = `<option value="">Select subcategory</option>`;
+          (data[category.value] || []).forEach(sub => {
+            const opt = document.createElement("option");
+            opt.value = sub;
+            opt.textContent = sub;
+            subcategory.appendChild(opt);
+          });
+        };
       });
 
     submitBtn.onclick = () => {
@@ -165,6 +175,7 @@
         <div><strong>Amount:</strong> ${amount.value}</div>
         <div><strong>Notes:</strong> ${rawText.value}</div>
       `;
+
       previewBox.classList.remove("hidden");
       confirmBtn.classList.remove("hidden");
     };
@@ -178,17 +189,23 @@
         subcategory: subcategory.value,
         amount: Number(amount.value),
         excludeFromMonthly: exclude.value,
+        tag: "",
         notes: rawText.value
       };
 
-      await fetch(WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+      try {
+        await fetch(WEBHOOK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
 
-      alert("Recorded ✅");
-      location.reload();
+        alert("Recorded ✅");
+        location.reload();
+      } catch (e) {
+        alert("Failed ❌");
+        console.error(e);
+      }
     };
   </script>
 </body>
